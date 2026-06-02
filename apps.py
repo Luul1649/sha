@@ -71,38 +71,75 @@ with col3:
 
 st.markdown("---")
 
-# 5. Interactive Visualizations Layout
-chart_col1, chart_col2 = st.columns(2)
+# 5. Tab Layout Splitting Visuals from the Text Report
+tab1, tab2 = st.tabs(["📊 Interactive Visual Analytics", "📜 Policy Report & Recommendations"])
 
-with chart_col1:
-    st.subheader("⚖️ Intended Policy vs. Reality")
-    # Interactive scatter tracking divergence
-    fig_scatter = px.scatter(
-        df_sim.sample(min(len(df_sim), 1000)), 
-        x='True_Income', 
-        y='Final_Charged_Premium',
-        color='Is_Poor',
-        labels={'True_Income': 'True Household Income (KES)', 'Final_Charged_Premium': 'Final Premium Assigned (KES)'},
-        title="Divergence from Proportional 2.75% Premium Flatline",
-        color_discrete_map={True: '#EF553B', False: '#636EFA'}
-    )
-    st.plotly_chart(fig_scatter, use_container_width=True)
+with tab1:
+    chart_col1, chart_col2 = st.columns(2)
 
-with chart_col2:
-    st.subheader("📈 Distribution of Effective Premium Burden")
-    # Histogram evaluating spike shifts away from standard tax rate
-    fig_hist = px.histogram(
-        df_sim, 
-        x='Effective_Tax_Rate', 
-        nbins=40,
-        color='Is_Poor',
-        labels={'Effective_Tax_Rate': 'Effective Premium Tax Rate (% of Income)'},
-        title="How many low-income households clear the 2.75% burden ceiling?",
-        color_discrete_map={True: '#EF553B', False: '#636EFA'}
-    )
-    fig_hist.add_vline(x=2.75, line_dash="dash", line_color="green", annotation_text="Statutory Target (2.75%)")
-    st.plotly_chart(fig_hist, use_container_width=True)
+    with chart_col1:
+        st.subheader("⚖️ Intended Policy vs. Reality")
+        fig_scatter = px.scatter(
+            df_sim.sample(min(len(df_sim), 1000)), 
+            x='True_Income', 
+            y='Final_Charged_Premium',
+            color='Is_Poor',
+            labels={'True_Income': 'True Household Income (KES)', 'Final_Charged_Premium': 'Final Premium Assigned (KES)'},
+            title="Divergence from Proportional 2.75% Premium Flatline",
+            color_discrete_map={True: '#EF553B', False: '#636EFA'}
+        )
+        st.plotly_chart(fig_scatter, use_container_width=True)
 
-# 6. Data Transparency Sub-Panel
-st.subheader("📋 Raw Simulated Dataset Preview")
-st.dataframe(df_sim[['True_Income', 'Intended_Premium', 'Final_Charged_Premium', 'Overcharge_Amount', 'Effective_Tax_Rate']].head(100), use_container_width=True)
+    with chart_col2:
+        st.subheader("📈 Distribution of Effective Premium Burden")
+        fig_hist = px.histogram(
+            df_sim, 
+            x='Effective_Tax_Rate', 
+            nbins=40,
+            color='Is_Poor',
+            labels={'Effective_Tax_Rate': 'Effective Premium Tax Rate (% of Income)'},
+            title="How many low-income households clear the 2.75% burden ceiling?",
+            color_discrete_map={True: '#EF553B', False: '#636EFA'}
+        )
+        fig_hist.add_vline(x=2.75, line_dash="dash", line_color="green", annotation_text="Statutory Target (2.75%)")
+        st.plotly_chart(fig_hist, use_container_width=True)
+
+    # Data Transparency Sub-Panel
+    st.subheader("📋 Raw Simulated Dataset Preview")
+    st.dataframe(df_sim[['True_Income', 'Intended_Premium', 'Final_Charged_Premium', 'Overcharge_Amount', 'Effective_Tax_Rate']].head(100), use_container_width=True)
+
+with tab2:
+    st.header("📜 Executive Policy Briefing")
+    st.caption("Analyzing Algorithmic Bias & Equity Gaps in Kenya’s SHA Means-Testing Instrument")
+    
+    st.markdown("""
+    ### 1. Executive Summary
+    The transition from the National Hospital Insurance Fund (NHIF) to the Social Health Authority (SHA) was designed to establish a progressive healthcare financing framework. By replacing the old regressive flat-fee steps with an equitable **2.75% standard rate**, the policy intended to ensure high earners subsidise low-income segments. 
+    
+    However, live simulations and independent operational audits reveal a critical structural flaw. Because informal sector workers lack formal payroll files, SHA implements an AI-driven Proxy Means Testing (PMT) algorithm. This tool displays a verified **39% exclusion error rate among Kenya's bottom 40% income earners**. Instead of protecting the poor, the model overestimates household resources, misclassifying vulnerable citizens into wealthier premium brackets. This creates a severe **Fairness Gap**, driving their effective financial burden far above the statutory 2.75% baseline.
+    
+    ---
+    
+    ### 2. Key Findings & Data Insights
+    * **The Burden Multiplier:** While formal employees face a strict, predictable 2.75% payroll deduction, informal households are at the mercy of lifestyle proxy variables (e.g., roofing material, livestock ownership, household size). When the algorithm miscalculates these indices, the financial burden spikes dynamically between **5.50% and 11.20%** of true income for impacted families.
+    * **The Floor Penalty Paradox:** The absolute statutory minimum premium is set at **KES 300** per month. For a vulnerable casual laborer earning KES 7,500 monthly, this mandatory floor translates to a **4.0% effective tax rate**—meaning the poorest citizens legally pay a higher proportion of their income than middle-class formal workers.
+    * **Systemic Exclusion:** When a low-income family is algorithmically over-assessed, they are billed for premium amounts they cannot afford. Because access to healthcare services is tied to an active, paid-up profile, these algorithmic glitches result in immediate, direct exclusion from medical treatment at hospital reception desks.
+    
+    ---
+    
+    ### 3. Recommended Measures & Corrective Actions
+    
+    #### 📊 Recalibrate and Open-Source the PMT Variable Matrix
+    The Ministry of Health must strip out highly volatile, non-liquid proxy variables (such as basic electronic ownership) from the algorithm. Weight the algorithm heavily toward localized multi-dimensional poverty indices using verified regional data from the Kenya Continuous Household Survey (KCHS). The algorithm's source code should be open-sourced for peer review by local data scientists to eradicate black-box bias.
+    
+    #### ⚖️ Establish a Legally Mandated, Immediate Appeals Window
+    Implement an automated "Flag and Freeze" mechanism directly inside the SHA registration portal. If a citizen is assigned an informal premium above the KES 300 minimum, they must have the right to trigger an instant appeal. While the appeal is being manually verified by a local community health promoter, the premium must be frozen at the KES 300 baseline to ensure medical coverage is never cut off.
+    
+    #### 📉 Introduce a Floating Minimum Floor for Vulnerable Households
+    Remove the strict KES 300 hard floor for households verified as indigent or ultra-poor. Transition to a tiered floor system (e.g., KES 0, KES 100, or KES 200) for the bottom two income deciles. This removes the unfair floor penalty and aligns the lowest-earning segment with the universal 2.75% target rate.
+    
+    #### 🏥 Decouple Premium Collection from Immediate Emergency Care
+    Pass a strict administrative directive enforcing unconditional access to critical medical care. Implement a "Treatment First, Billing Reconciliation Later" rule for all public and empanelled private facilities. Algorithmic discrepancies or payment defaults must be treated as civil state debts rather than grounds to deny emergency room access or maternal healthcare.
+    """)
+    
+    # Decorative informational alert box
